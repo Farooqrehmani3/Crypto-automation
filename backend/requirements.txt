@@ -1,0 +1,30 @@
+# Crypto Intelligence AI Platform — Backend Dependencies
+# Install: pip install -r requirements.txt
+
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+sqlalchemy[asyncio]>=2.0.36
+asyncpg>=0.30.0
+psycopg2-binary>=2.9.10
+alembic>=1.14.0
+pydantic>=2.10.0
+pydantic-settings>=2.7.0
+python-jose[cryptography]>=3.3.0
+httpx>=0.28.0
+redis>=5.2.0
+arq>=0.26.0
+slowapi>=0.1.9
+tenacity>=9.0.0
+structlog>=24.4.0
+openai>=1.55.0
+TA-Lib>=0.6.0
+pandas>=2.2.0
+numpy>=2.1.0
+scikit-learn>=1.5.0
+prophet>=1.1.5
+supabase>=2.7.0
+
+# Dev
+pytest>=8.3.0
+pytest-asyncio>=0.24.0
+ruff>=0.8.0

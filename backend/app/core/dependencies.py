@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.core.security import get_current_user, get_current_user_id
-from app.models.base import async_session_factory
+from app.models.base import get_async_session_factory
 
 settings = get_settings()
 
@@ -26,7 +26,7 @@ settings = get_settings()
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Yield an async SQLAlchemy session.  The session is closed automatically
     when the request scope ends."""
-    async with async_session_factory() as session:
+    async with get_async_session_factory()() as session:
         try:
             yield session
             await session.commit()

@@ -27,11 +27,18 @@ settings = get_settings()
 logger = get_logger(__name__)
 
 # ── Rate Limiter ──────────────────────────────────────────────────────────────
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=[settings.RATE_LIMIT_DEFAULT],
-    storage_uri=settings.REDIS_URL,
-)
+# Falls back to in-memory storage if Redis is unavailable
+try:
+    limiter = Limiter(
+        key_func=get_remote_address,
+        default_limits=[settings.RATE_LIMIT_DEFAULT],
+        storage_uri=settings.REDIS_URL,
+    )
+except Exception:
+    limiter = Limiter(
+        key_func=get_remote_address,
+        default_limits=[settings.RATE_LIMIT_DEFAULT],
+    )
 
 
 # ── Lifespan ──────────────────────────────────────────────────────────────────
@@ -62,9 +69,9 @@ async def lifespan(app: FastAPI):
     # Verify database connectivity (best-effort — the app can start without DB)
     try:
         from sqlalchemy import text
-        from app.models.base import engine
+        from app.models.base import get_engine
 
-        async with engine.begin() as conn:
+        async with get_engine().begin() as conn:
             await conn.execute(text("SELECT 1"))
         logger.info("database_connected", url=settings.DATABASE_URL.split("@")[-1])
     except Exception as exc:

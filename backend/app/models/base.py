@@ -44,20 +44,44 @@ class Base(DeclarativeBase):
 
 # ── Engine & Session Factory ──────────────────────────────────────────────────
 
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.DB_ECHO,
-    pool_size=settings.DB_POOL_SIZE,
-    max_overflow=settings.DB_MAX_OVERFLOW,
-    pool_timeout=settings.DB_POOL_TIMEOUT,
-    pool_recycle=settings.DB_POOL_RECYCLE,
-)
+_engine = None
+_async_session_factory = None
 
-async_session_factory = async_sessionmaker(
-    engine,
-    expire_on_commit=False,
-    autoflush=False,
-)
+
+def get_engine():
+    global _engine
+    if _engine is None:
+        _engine = create_async_engine(
+            settings.DATABASE_URL,
+            echo=settings.DB_ECHO,
+            pool_size=settings.DB_POOL_SIZE,
+            max_overflow=settings.DB_MAX_OVERFLOW,
+            pool_timeout=settings.DB_POOL_TIMEOUT,
+            pool_recycle=settings.DB_POOL_RECYCLE,
+        )
+    return _engine
+
+
+def get_async_session_factory():
+    global _async_session_factory
+    if _async_session_factory is None:
+        _async_session_factory = async_sessionmaker(
+            get_engine(),
+            expire_on_commit=False,
+            autoflush=False,
+        )
+    return _async_session_factory
+
+
+# Lazy properties for backward compatibility
+@property
+def _engine_prop(self=None):
+    return get_engine()
+
+
+@property
+def _session_prop(self=None):
+    return get_async_session_factory()
 
 
 # ── Mixins ────────────────────────────────────────────────────────────────────

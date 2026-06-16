@@ -10,8 +10,8 @@ from app.models.base import (
     TimestampMixin,
     SoftDeleteMixin,
     AllMixins,
-    engine,
-    async_session_factory,
+    get_engine,
+    get_async_session_factory,
     NAMING_CONVENTION,
 )
 from app.models.coin import Coin, CoinPrice
@@ -28,8 +28,8 @@ __all__ = [
     "TimestampMixin",
     "SoftDeleteMixin",
     "AllMixins",
-    "engine",
-    "async_session_factory",
+    "get_engine",
+    "get_async_session_factory",
     "NAMING_CONVENTION",
     # Core models
     "Coin",

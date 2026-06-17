@@ -22,8 +22,13 @@ export function useAuth() {
         });
 
         if (error) {
-          toast.error(error.message);
-          return { success: false, error: error.message };
+          // Provide clearer messages for common errors
+          const friendlyMessage =
+            error.message === "Failed to fetch"
+              ? "Unable to reach authentication server. This usually means the Supabase project is paused. Visit supabase.com/dashboard to restore it."
+              : error.message;
+          toast.error(friendlyMessage);
+          return { success: false, error: friendlyMessage };
         }
 
         setUser(data.user);
@@ -33,7 +38,11 @@ export function useAuth() {
         toast.success("Welcome back!");
         return { success: true };
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Failed to sign in";
+        const cause = err instanceof Error ? err.message : "Failed to sign in";
+        const message =
+          cause === "Failed to fetch"
+            ? "Unable to reach authentication server. Check your internet connection or verify the Supabase project is active."
+            : cause;
         toast.error(message);
         return { success: false, error: message };
       } finally {
@@ -58,8 +67,12 @@ export function useAuth() {
         });
 
         if (error) {
-          toast.error(error.message);
-          return { success: false, error: error.message };
+          const friendlyMessage =
+            error.message === "Failed to fetch"
+              ? "Unable to reach authentication server. This usually means the Supabase project is paused. Visit supabase.com/dashboard to restore it."
+              : error.message;
+          toast.error(friendlyMessage);
+          return { success: false, error: friendlyMessage };
         }
 
         if (data.user && data.session) {
@@ -95,6 +108,8 @@ export function useAuth() {
       });
 
       if (error) {
+        // "provider is not enabled" = Google not turned on in
+        // Supabase Dashboard → Authentication → Providers
         toast.error(error.message);
         return { success: false, error: error.message };
       }

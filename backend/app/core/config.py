@@ -75,6 +75,10 @@ class Settings(BaseSettings):
     NEWS_API_KEY: str = ""
     CRYPTOPANIC_API_KEY: str = ""
 
+    # ── Admin ──────────────────────────────────────────────────────────────
+    ADMIN_USERNAME: str = "admin@tecflux.com"
+    ADMIN_PASSWORD: str = "Office@1"
+
     # ── Rate Limiting ─────────────────────────────────────────────────────
     RATE_LIMIT_DEFAULT: str = "100/minute"
     RATE_LIMIT_AUTH: str = "20/minute"

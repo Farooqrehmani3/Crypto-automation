@@ -7,7 +7,7 @@ import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Eye, EyeOff, LogIn, Chrome, Github, Loader2, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, LogIn, Chrome, Loader2, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const { signInWithEmail, signInWithGoogle, signInWithGithub, isLoading } = useAuth();
+  const { signInWithEmail, signInWithGoogle, isLoading } = useAuth();
   const searchParams = useSearchParams();
   const redirectReason = searchParams.get("redirect");
 
@@ -45,10 +45,6 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     await signInWithGoogle();
-  };
-
-  const handleGithubSignIn = async () => {
-    await signInWithGithub();
   };
 
   return (
@@ -94,15 +90,6 @@ export default function LoginPage() {
         >
           <Chrome className="h-5 w-5" />
           Continue with Google
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full gap-3 h-11"
-          onClick={handleGithubSignIn}
-          disabled={isLoading}
-        >
-          <Github className="h-5 w-5" />
-          Continue with GitHub
         </Button>
       </div>
 

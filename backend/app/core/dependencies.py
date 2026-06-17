@@ -15,7 +15,7 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
-from app.core.security import get_current_user, get_current_user_id
+from app.core.security import get_current_admin, get_current_user, get_current_user_id
 from app.models.base import get_async_session_factory
 
 settings = get_settings()
@@ -73,6 +73,7 @@ DB = Annotated[AsyncSession, Depends(get_db)]
 RedisDep = Annotated[Redis, Depends(get_redis)]
 CurrentUser = Annotated[dict, Depends(get_current_user)]
 CurrentUserId = Annotated[str, Depends(get_current_user_id)]
+CurrentAdmin = Annotated[dict, Depends(get_current_admin)]
 
 
 __all__ = [
@@ -83,4 +84,5 @@ __all__ = [
     "RedisDep",
     "CurrentUser",
     "CurrentUserId",
+    "CurrentAdmin",
 ]

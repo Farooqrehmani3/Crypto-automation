@@ -1,21 +1,102 @@
 """
-JWT verification against Supabase auth.
+JWT verification against Supabase auth and admin authentication.
 
-The application delegates authentication to Supabase Auth.  Clients
+The application delegates user authentication to Supabase Auth.  Clients
 pass the Supabase-issued JWT in the Authorization header and we verify
 it using the Supabase client and/or the JWT secret.
+
+Admin authentication uses a separate hardcoded credential check with its own
+JWT issuance.
 """
 
 from __future__ import annotations
 
+import hmac
+from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException, status
+from jose import jwt
 from supabase import create_client as create_supabase_client
 
 from app.core.config import get_settings
 
 settings = get_settings()
+
+# ── Admin token helpers ───────────────────────────────────────────────────────
+
+_ADMIN_JWT_ALGORITHM = "HS256"
+_ADMIN_TOKEN_EXPIRY_HOURS = 12
+
+
+def _constant_time_compare(a: str, b: str) -> bool:
+    """Compare two strings in constant time to prevent timing attacks."""
+    return hmac.compare_digest(a.encode("utf-8"), b.encode("utf-8"))
+
+
+def verify_admin_credentials(username: str, password: str) -> bool:
+    """Verify admin credentials using constant-time comparison.
+
+    Returns True if the username and password match the configured admin
+    credentials.
+    """
+    return _constant_time_compare(username, settings.ADMIN_USERNAME) and _constant_time_compare(
+        password, settings.ADMIN_PASSWORD
+    )
+
+
+def create_admin_token(username: str) -> str:
+    """Create a signed JWT for an authenticated admin session.
+
+    The token includes role="admin" and is valid for the configured expiry.
+    """
+    now = datetime.now(timezone.utc)
+    payload = {
+        "sub": f"admin:{username}",
+        "username": username,
+        "role": "admin",
+        "iat": now,
+        "exp": now + timedelta(hours=_ADMIN_TOKEN_EXPIRY_HOURS),
+        "type": "admin",
+    }
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=_ADMIN_JWT_ALGORITHM)
+
+
+def verify_admin_token(token: str) -> dict:
+    """Decode and validate an admin JWT.
+
+    Returns the decoded payload if valid.
+
+    Raises:
+        HTTPException 401: If the token is invalid, expired, or not an admin token.
+    """
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing admin authentication token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[_ADMIN_JWT_ALGORITHM])
+        if payload.get("type") != "admin" or payload.get("role") != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid admin token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Admin token has expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except jwt.JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid admin token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
 def _get_supabase_client():
@@ -68,8 +149,6 @@ async def verify_supabase_jwt(token: str) -> dict:
     # Fallback: decode manually with JWT secret
     if settings.SUPABASE_JWT_SECRET:
         try:
-            from jose import jwt
-
             payload = jwt.decode(
                 token,
                 settings.SUPABASE_JWT_SECRET,
@@ -133,9 +212,48 @@ async def get_current_user_id(
     return user["sub"]
 
 
+async def get_current_admin(
+    authorization: Annotated[str | None, Header(alias="Authorization")] = None,
+) -> dict:
+    """FastAPI dependency that extracts and verifies an admin JWT.
+
+    Usage:
+        @router.get("/admin/dashboard")
+        async def admin_dashboard(admin: dict = Depends(get_current_admin)):
+            ...
+
+    Returns:
+        Decoded admin JWT payload with username and role.
+
+    Raises:
+        HTTPException 401: If the token is missing, invalid, expired, or not an
+            admin token.
+    """
+    if not authorization:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing Authorization header",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Authorization header format. Use: Bearer <token>",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return verify_admin_token(token)
+
+
 # Re-export for cleaner imports
 __all__ = [
     "verify_supabase_jwt",
     "get_current_user",
     "get_current_user_id",
+    "verify_admin_credentials",
+    "create_admin_token",
+    "verify_admin_token",
+    "get_current_admin",
 ]

@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Eye, EyeOff, UserPlus, Chrome, Github, Loader2, Check } from "lucide-react";
+import { Eye, EyeOff, UserPlus, Chrome, Loader2, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +47,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [password, setPassword] = useState("");
-  const { signUpWithEmail, signInWithGoogle, signInWithGithub, isLoading } = useAuth();
+  const { signUpWithEmail, signInWithGoogle, isLoading } = useAuth();
 
   const {
     register,
@@ -93,15 +93,6 @@ export default function RegisterPage() {
         >
           <Chrome className="h-5 w-5" />
           Continue with Google
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full gap-3 h-11"
-          onClick={signInWithGithub}
-          disabled={isLoading}
-        >
-          <Github className="h-5 w-5" />
-          Continue with GitHub
         </Button>
       </div>
 

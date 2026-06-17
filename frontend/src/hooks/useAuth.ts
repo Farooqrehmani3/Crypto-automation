@@ -109,31 +109,6 @@ export function useAuth() {
     }
   }, [supabase, setLoading]);
 
-  const signInWithGithub = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "github",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) {
-        toast.error(error.message);
-        return { success: false, error: error.message };
-      }
-
-      return { success: true };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to sign in with GitHub";
-      toast.error(message);
-      return { success: false, error: message };
-    } finally {
-      setLoading(false);
-    }
-  }, [supabase, setLoading]);
-
   const signOut = useCallback(async () => {
     try {
       setLoading(true);
@@ -193,7 +168,6 @@ export function useAuth() {
     signInWithEmail,
     signUpWithEmail,
     signInWithGoogle,
-    signInWithGithub,
     signOut,
     resetPassword,
   };

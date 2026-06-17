@@ -50,6 +50,6 @@ export const config = {
      * - api/webhooks (webhook endpoints)
      * - public (public files)
      */
-    "/((?!_next/static|_next/image|favicon.ico|images|api/webhooks|public).*)",
+    "/((?!_next/static|_next/image|favicon.ico|images|api/webhooks|public|admin).*)",
   ],
 };
